@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+#
+# Project: Video Streaming with Flask
+# Author: Log0 <im [dot] ckieric [at] gmail [dot] com>
+# Date: 2014/12/21
+# Website: http://www.chioka.in/
+# Description:
+# Modified to support streaming out with webcams, and not just raw JPEGs.
+# Most of the code credits to Miguel Grinberg, except that I made a small tweak. Thanks!
+# Credits: http://blog.miguelgrinberg.com/post/video-streaming-with-flask
+#
+# Usage:
+# 1. Install Python dependencies: cv2, flask. (wish that pip install works like a charm)
+# 2. Run "python main.py".
+# 3. Navigate the browser to the local webpage.
+
+from flask import Flask, render_template, Response
+import rest
+import json
+import os
+
+if __name__ == '__main__':
+
+    server_url = 'http://127.0.0.1:8081'
+    kod = 'aaaa'
+
+    stream_url = server_url+'/get_ip'
+    podaci = {"kod":kod}
+    p = json.dumps(podaci)
+    provera = rest.send('POST', stream_url, p, {'Content-Type': 'application/json'})
+    print(provera)
+    if 'status' in provera and provera['status'] == 'ok':
+        ip = provera['ip']
+        print(ip)
+        os.system(r'"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" %s' % ip)
+    else:
+        print('neuspesno')
+
+    #app.run(host='0.0.0.0', debug=True)

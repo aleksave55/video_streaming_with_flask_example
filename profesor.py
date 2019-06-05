@@ -18,6 +18,9 @@ from flask import Flask, render_template, Response
 from camera import VideoCamera, ScreenShot
 import rest
 import json
+import threading
+from threading import Thread
+from multiprocessing import Process
 
 app = Flask(__name__)
 
@@ -38,20 +41,37 @@ def video_feed():
     return Response(gen(ScreenShot()),
                      mimetype='multipart/x-mixed-replace; boundary=frame')
 
+def pokreni_server():
+    app.run(host='0.0.0.0', port=5000, debug=True)
+
 if __name__ == '__main__':
+    server_url = 'http://127.0.0.1:8081'
+    odgovor = rest.send('POST', server_url+'/is_running', {}, {'Content-Type': 'application/json'})
+    print(odgovor)
 
-    server_url = 'http://0.0.0.0:8081'
-    user_name = input("unesi user_name: ")
-    sifra = input("unesi sifru: ")
+    if odgovor != {}:
+        user_name = input("unesi user_name: ")
+        sifra = input("unesi sifru: ")
+        predmet = input("unesi naziv predmeta: ")
 
-    stream_url = server_url+'/start_stream'
-    stream_dict = '{"user_name": %s, "sifra": %s}' % (user_name, sifra)
-    podaci = {"user_name":user_name, "sifra":sifra}
-    p = json.dumps(podaci)
-    provera = rest.send('POST', stream_url, p, {'Content-Type': 'application/json'})
-    if provera['status'] == 'ok':
-        print('uspesno')
+        stream_url = server_url+'/start_stream'
+        stream_dict = '{"user_name": %s, "sifra": %s}' % (user_name, sifra)
+        podaci = {"user_name":user_name, "sifra":sifra, "predmet":predmet}
+        p = json.dumps(podaci)
+        provera = rest.send('POST', stream_url, p, {'Content-Type': 'application/json'})
+        print(provera)
+        if 'status' in provera and provera['status'] == 'ok':
+            print('uspesno')
+
+            # server = Process(target=pokreni_server)
+            # server.start()
+            # input('unesi nesto: ')
+            # server.terminate()
+            # server.join()
+            # print('kraj')
+            pokreni_server()
+        else:
+            print('neuspesno')
     else:
-        print('neuspesno')
+        pokreni_server()
 
-    #app.run(host='0.0.0.0', debug=True)
